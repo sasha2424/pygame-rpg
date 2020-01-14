@@ -1,0 +1,38 @@
+
+
+Event
+
+- type flags
+  #set of flags to classify event
+- rarity
+  #Rarity scale of event
+- Set of roles
+  - name
+  - assigned player (None)
+  - is optional
+- Start operator
+  # starts event (might move people to new location)
+- End operator
+  # ends event
+
+
+Character
+
+ - Interests
+  # type flags map to value
+  # used to give events preference
+ - goal set
+  - each operator takes population and return value
+
+
+Event Operator
+ - takes set of roles with people assigned
+
+Type flag
+ - Types of events / interests (outdoor, active, ...)
+
+Goal operator
+ - Looks as full population and produces scalar value for goal
+
+Events are selected based on interest match to character, event rarity, and their
+alignment with player goal
