@@ -86,7 +86,7 @@ class EntityHandler():
 
 class Entity:
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, z):
         self.x = x
         self.y = y
 
@@ -110,7 +110,7 @@ class Entity:
     def update(self, local_entities, player):
         pass
 
-    def draw(self, screen, dx, dy):
+    def draw(self, screen, dx, dy, rotation):
         screen.blit(self.image,(self.x - dx - self.sprite_shift_x, self.y - dy - self.sprite_shift_y))
         # for b in self.collisionBox:
         #     if b.is_rect:

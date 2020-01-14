@@ -8,7 +8,8 @@ class KeyHandler:
         self.DOWN = False
         self.RIGHT = False
         self.LEFT = False
-
+        self.TURN_RIGHT = False
+        self.TURN_LEFT = False
 
     def add_input(self, key, pressed):
         if key == K_d:
@@ -19,6 +20,10 @@ class KeyHandler:
             self.DOWN = pressed
         if key == K_w:
             self.UP = pressed
+        if key == K_e:
+            self.TURN_RIGHT = pressed
+        if key == K_q:
+            self.TURN_LEFT = pressed
 
 
 
