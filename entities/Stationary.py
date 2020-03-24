@@ -5,9 +5,8 @@ from Utils import *
 import pygame
 
 class Rock(Entity):
-
-    def __init__(self, x, y):
-        super().__init__(x, y)
+    def __init__(self, x, y, z):
+        super().__init__(x, y, z)
 
         self.spritesheet = SpriteSheet("rock", (50*8, 50*8))
         self.animation = Animation(self.spritesheet)
@@ -22,8 +21,8 @@ class Rock(Entity):
 
 
 class LittleRock(Entity):
-    def __init__(self, x, y):
-        super().__init__(x, y)
+    def __init__(self, x, y, z):
+        super().__init__(x, y, z)
 
         self.spritesheet = SpriteSheet("rock", (25*8, 25*8))
         self.animation = Animation(self.spritesheet)
@@ -35,3 +34,19 @@ class LittleRock(Entity):
         self.add_collision_box(-7.5,-10,15,10)
 
         self.canMove = False
+
+class Building(Entity):
+
+    class Room:
+        def __init__(self, x, y, width, height):
+            pass
+
+    def __init__(self, x, y, z):
+        super().__init__(x, y, z)
+
+        # set of rooms
+        # each room has floor texture and wall texture
+        # each room has doors / windows
+
+    def draw(self, screen, dx, dy):
+        super().draw(screen, dx, dy)

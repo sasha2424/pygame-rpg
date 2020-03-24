@@ -89,6 +89,7 @@ class Entity:
     def __init__(self, x, y, z):
         self.x = x
         self.y = y
+        self.z = z
 
         self.sprite_shift_x = 0
         self.sprite_shift_y = 0
@@ -110,7 +111,7 @@ class Entity:
     def update(self, local_entities, player):
         pass
 
-    def draw(self, screen, dx, dy, rotation):
+    def draw(self, screen, dx, dy):
         screen.blit(self.image,(self.x - dx - self.sprite_shift_x, self.y - dy - self.sprite_shift_y))
         # for b in self.collisionBox:
         #     if b.is_rect:

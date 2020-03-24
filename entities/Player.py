@@ -16,9 +16,8 @@ class State(Enum):
 
 
 class Player(Entity):
-    def __init__(self, x, y):
-        super().__init__(x, y)
-        self.rotation = 0
+    def __init__(self, x, y, z):
+        super().__init__(x, y, z)
 
         self.add_collision_sphere(32,60,20,20)
 

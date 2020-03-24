@@ -27,15 +27,15 @@ screen = pygame.display.set_mode((600,600),RESIZABLE)
 pygame.display.set_caption("Game")
 
 
-player = Player(0,0)
+player = Player(0,0,0)
 
 interactionHandler = InteractionHandler(player)
 keyHandler = KeyHandler(player)
 
 entityHandler = EntityHandler(player)
-#entityHandler.add_entity(Rock(100,100))
-#entityHandler.add_entity(LittleRock(100,200))
-#entityHandler.add_entity(Rick(100,0))
+entityHandler.add_entity(Rock(100,100,0))
+entityHandler.add_entity(LittleRock(100,200,0))
+entityHandler.add_entity(Rick(100,0,0))
 
 tileHandler = TileHandler()
 chunkHandler = ChunkHandler()

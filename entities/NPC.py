@@ -234,8 +234,8 @@ class Dialogue:
 
 
 class NPC(Entity):
-    def __init__(self, x, y):
-        super().__init__(x, y)
+    def __init__(self, x, y, z):
+        super().__init__(x, y, z)
 
         self.dialogue = None
         self.interact_range = 100
@@ -259,8 +259,8 @@ class NPC(Entity):
 
 class Rick(NPC):
 
-    def __init__(self, x, y):
-        super().__init__(x, y)
+    def __init__(self, x, y, z):
+        super().__init__(x, y, z)
 
         self.spritesheet = SpriteSheet("rick", (4*30,4*40))
         self.animation = Animation(self.spritesheet)
