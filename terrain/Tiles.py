@@ -1,6 +1,11 @@
 import numpy as np
 
 
+"""
+Depricated
+
+"""
+
 class Tile:
     def get_tile(id):
         if id == 1:

@@ -45,36 +45,13 @@ class TileHandler:
             end_y = math.floor((player.y + center_y - chunk_world_y)/TILE_SIZE) + 1
             end_y = min(end_y,chunk.tile_map.shape[1])
 
-            for y in range(start_y,end_y):
-                for x in range(start_x,end_x):
+            for x in range(start_x,end_x):
+                for y in range(start_y,end_y):
                     tile_x = chunk_world_x + x * TILE_SIZE
                     tile_y = chunk_world_y + y * TILE_SIZE
+                    tile_texture = self.texture_from_id(chunk.tile_map[x,y])
 
-                    if chunk.texture_id_cache[x,y,0] == -1:
-                        t = Tile.get_tile(chunk.tile_map[x,y])
-                        heights, no_cache = chunk.get_adjacent_relative_heights(x,y,chunkHandler.active_chunks.values())
-                        tile_texture_id, tile_side_texture_id = Tile.get_texture_ids(t,heights)
-                        if not no_cache:
-                            chunk.texture_id_cache[x,y,0] = tile_texture_id
-                            chunk.texture_id_cache[x,y,1] = tile_side_texture_id
-                            # If the chunk on the front side is lower
-                            chunk.front_visible_cache[x,y] = heights[2]
-                    else:
-                        tile_texture_id = chunk.texture_id_cache[x,y,0]
-                        tile_side_texture_id = chunk.texture_id_cache[x,y,1]
-
-                    tile_texture = self.texture_from_id(tile_texture_id)
-                    tile_side_texture = self.texture_from_id(tile_side_texture_id)
-
-                    shift_z = player.z - chunk.height_map[x,y] * TILE_SIZE
-                    screen.blit(tile_texture,(tile_x - dx, tile_y - dy + shift_z))
-                    h = chunk.front_visible_cache[x,y]
-
-                    if h < 0:
-                        for i in range(abs(h)):
-                            shift_z = player.z - i * TILE_SIZE
-                            screen.blit(tile_side_texture,(tile_x - dx, tile_y - dy + shift_z))
-
+                    screen.blit(tile_texture,(tile_x - dx, tile_y - dy))
 
     def texture_from_id(self,id):
         return self.tiles[id]
@@ -131,7 +108,6 @@ class ChunkHandler:
 
     def save_chunk(self, chunk, entityHandler):
         chunk.clear_entities()
-        chunk.wipe_cache()
         entityHandler.store_entities_in_chunk(chunk)
         print("SAVE",chunk.chunk_x,chunk.chunk_y,len(chunk.entities))
         name = "chunk_" + str(chunk.chunk_x) + "_" + str(chunk.chunk_y)
@@ -143,7 +119,6 @@ class ChunkHandler:
             name = "chunk_" + str(coord[0]) + "_" + str(coord[1])
             with open(os.path.join(self.save_path, name), 'rb') as file:
                 chunk = pickle.load(file)
-                chunk.reset_cache()
             print("LOAD",chunk.chunk_x,chunk.chunk_y,len(chunk.entities))
         except:
             chunk = Chunk(coord[0],coord[1])
@@ -164,33 +139,9 @@ class Chunk:
     def __init__(self, chunk_x, chunk_y):
         self.chunk_x = chunk_x
         self.chunk_y = chunk_y
-        self.tile_map = np.ones((TILES_PER_CHUNK,TILES_PER_CHUNK))
-        self.height_map = np.zeros((TILES_PER_CHUNK,TILES_PER_CHUNK))
+        self.tile_map = np.zeros((TILES_PER_CHUNK,TILES_PER_CHUNK), dtype='int')
 
-        self.texture_id_cache = np.full((TILES_PER_CHUNK,TILES_PER_CHUNK,2),-1,dtype='int')
-        self.front_visible_cache = np.zeros((TILES_PER_CHUNK,TILES_PER_CHUNK),dtype='int')
         self.entities = []
-
-        self.height_map[10,10] = 5
-
-        self.height_map[8,4] = 4
-        self.height_map[8,5] = 3
-        self.height_map[8,6] = 2
-        self.height_map[8,7] = 1
-
-        self.height_map[10,2] = 1
-        self.height_map[11,2] = 2
-        self.height_map[12,2] = 3
-        self.height_map[13,2] = 4
-
-
-    def wipe_cache(self):
-        self.texture_id_cache = None
-        self.front_visible_cache = None
-
-    def reset_cache(self):
-        self.texture_id_cache = np.full((TILES_PER_CHUNK,TILES_PER_CHUNK,2), -1, dtype='int')
-        self.front_visible_cache = np.zeros((TILES_PER_CHUNK,TILES_PER_CHUNK), dtype='int')
 
     def get_adjacent_relative_heights(self, x, y, active_chunks):
         # get all adjacent heights
