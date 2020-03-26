@@ -31,7 +31,7 @@ class EntityHandler():
         for entity in self.entities:
             entity.draw(screen, self.player.x - center_x, self.player.y - center_y)
 
-    def update(self, interactionHandler):
+    def update(self, interactionHandler, chunkHandler):
         for e in self.entities:
             #TODO should be local entities
             e.update(self.entities, self.player)
@@ -55,6 +55,30 @@ class EntityHandler():
                 e1 = self.entities[i]
                 e2 = self.entities[j]
                 EntityHandler.collide(e1, e2)
+
+        for e in self.entities:
+            self.collide_terrain(e,chunkHandler)
+
+    def collide_terrain(self, e, chunkHandler):
+        chunk = chunkHandler.get_chunk(e.x,e.y)
+        if chunk == None:
+            return
+        if not e.canMove:
+            return
+
+        shift_x = 0
+        shift_y = 0
+        for cb1 in e.collisionBox:
+            for cb2 in chunk.get_collision_box_for_height(e.z):
+                x, y = Box.collide(cb1,cb2)
+                #print(x,y)
+                if abs(x) > abs(shift_x):
+                    shift_x = x
+                if abs(y) > abs(shift_y):
+                    shift_y = y
+        e.x -= shift_x
+        e.y -= shift_y
+        return
 
     @staticmethod
     def collide(e1, e2):
@@ -130,10 +154,18 @@ class Entity:
         print(self.__class__)
         self.__init__(state[0],state[1])
 
+class Entity_Dud:
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+        self.z = 0
 
 class Box:
     def __init__(self, parent, x, y, w, h, is_rect):
-        self.parent = parent
+        if parent == None:
+            self.parent = Entity_Dud()
+        else:
+            self.parent = parent
         self.x = x
         self.y = y
         self.w = w

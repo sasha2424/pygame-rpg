@@ -41,7 +41,9 @@ tileHandler = TileHandler()
 chunkHandler = ChunkHandler()
 
 def tick():
-    entityHandler.update(interactionHandler)
+    # interaction handler for player interaction
+    # chunk handler for terrain collision
+    entityHandler.update(interactionHandler, chunkHandler)
 
 def render():
     chunkHandler.update(player.x, player.y, screen.get_width(), screen.get_height(), entityHandler)
