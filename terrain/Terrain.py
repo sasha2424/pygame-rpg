@@ -152,11 +152,14 @@ class Chunk:
 
         self.tile_map.fill(11)
 
-        self.tile_map[5,5] = 14
-        self.tile_map[5,6] = 42
+        self.tile_map[5,5] = 4
+        self.tile_map[6,5] = 24
 
-        self.height_map[5,5] = 1
-        self.height_map[5,6] = 1
+        self.tile_map[5,6] = 33
+        self.tile_map[6,6] = 53
+
+        self.height_map[5:7,5] = 1
+        self.height_map[5:7,6] = -1
 
         self.entities = []
 
@@ -171,31 +174,29 @@ class Chunk:
         world_x = self.chunk_x * CHUNK_SIZE
         world_y = self.chunk_y * CHUNK_SIZE
 
-        collisionBox = []
 
-        for x in range(self.height_map.shape[0]):
-            for y in range(self.height_map.shape[1]):
-                #don't need a collision box for terrain at same height
-                if self.height_map[x,y] == z:
+        def build_collision_boxes_rec(arr,list,x,y,w,h,val):
+            top_left = (arr[x:x+w//2,y:y+h//2],x,y)
+            top_right = (arr[x+w//2:x+w,y:y+h//2],x+w//2,y)
+            bottom_left = (arr[x:x+w//2,y+h//2:y+h],x,y+h//2)
+            bottom_right = (arr[x+w//2:x+w,y+h//2:y+h],x+w//2,y+h//2)
+            for sub,start_x,start_y in [top_left, top_right, bottom_left, bottom_right]:
+                if sub.shape[0] == 0 or sub.shape[1] == 0:
                     continue
+                if np.all(sub == val):
+                    # same height as entity so no need for collision
+                    continue
+                elif np.all(sub == sub[0,0]):
+                    # all same height so can be grouped
+                    b = Box(None, world_x + start_x * TILE_SIZE, world_y + start_y * TILE_SIZE, sub.shape[0]*TILE_SIZE, sub.shape[1]*TILE_SIZE, True)
+                    list.append(b)
+                else:
+                    # break into smaller peices
+                    build_collision_boxes_rec(arr,list,start_x,start_y,*sub.shape,val)
 
-                # check if this tile needs a collision box
-                # if it is at the edge of a chunk it needs a box
-                # if it has a neighbor of a different height needs a box
-                need_collision_box = True
-                for loc in [(x-1,y),(x+1,y),(x,y-1),(x,y+1)]:
-                    if loc[0] < 0 or x >= self.height_map.shape[0]:
-                        need_collision_box = False
-                        break
-                    if y < 0 or y  >= self.height_map.shape[1]:
-                        need_collision_box = False
-                        break
-                    if not self.height_map[x,y] == self.height_map[loc[0],loc[1]]:
-                        need_collision_box = False
-                        break
+            return list
 
-                b = Box(None, world_x + x * TILE_SIZE, world_y + y * TILE_SIZE, TILE_SIZE, TILE_SIZE, True)
-                collisionBox.append(b)
+        collisionBox = build_collision_boxes_rec(self.height_map,[],0,0,*self.height_map.shape, z)
         self.collision_cache[z] = collisionBox
         return collisionBox
 
