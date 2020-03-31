@@ -27,6 +27,8 @@ class TileHandler:
 
 
     def render(self, screen, player, chunkHandler):
+        
+
         center_x = screen.get_width() / 2
         center_y = screen.get_height() / 2
         dx = player.x - center_x
@@ -50,9 +52,41 @@ class TileHandler:
                 for y in range(start_y,end_y):
                     tile_x = chunk_world_x + x * TILE_SIZE
                     tile_y = chunk_world_y + y * TILE_SIZE
-                    tile_texture = self.texture_from_id(chunk.tile_map[x,y])
 
+                    if not (x,y) in chunk.neutral_cache.keys():
+                        self.build_tiles_and_cache(chunk, x, y,chunkHandler)
+
+                    tile = chunk.neutral_cache[(x,y)][0]
+                    tile_texture = self.texture_from_id(tile.get_texture_id())
                     screen.blit(tile_texture,(tile_x - dx, tile_y - dy))
+
+    def build_tiles_and_cache(self, chunk, x, y, chunkHandler):
+        adj_heights, no_cache = chunk.get_adjacent_heights_safe(x,y,chunkHandler.active_chunks.values())
+        adj_types, no_cache = chunk.get_adjacent_tile_types_safe(x,y,chunkHandler.active_chunks.values())
+        rel_heights = adj_heights - chunk.height_map[x,y]
+
+        h = chunk.height_map[x,y]
+
+        Type_ = get_tile_type_from_id(chunk.tile_map[x,y])
+
+        surface = Type_.get_surface(adj_types, rel_heights)
+        surface.original_y = y
+        chunk.add_to_neutral_cache(x, y - h, surface, chunkHandler)
+
+        if h == 1:
+            tile = Type_.get_side_single(adj_types[3],adj_types[1],adj_types[2])
+            tile.original_y = y
+            chunk.add_to_neutral_cache(x, y, tile, chunkHandler)
+        else:
+            for i in range(h):
+                if i == 0:
+                    tile = Type_.get_side_bottom(adj_types[3],adj_types[1],adj_types[2])
+                elif i == h-1:
+                    tile = Type_.get_side_top()
+                else:
+                    tile = Type_.get_side()
+                tile.original_y = y
+                chunk.add_to_neutral_cache(x, y - i, tile, chunkHandler)
 
     def texture_from_id(self,id):
         return self.tiles[id]
@@ -150,20 +184,18 @@ class Chunk:
         self.tile_map = np.zeros((TILES_PER_CHUNK,TILES_PER_CHUNK), dtype='int')
         self.height_map = np.zeros((TILES_PER_CHUNK,TILES_PER_CHUNK), dtype='int')
 
+        self.neutral_cache = {} # cache of Tile objects
+        self.collision_cache = {}
+
         self.tile_map.fill(11)
 
-        self.tile_map[5,5] = 4
-        self.tile_map[6,5] = 24
 
-        self.tile_map[5,6] = 33
-        self.tile_map[6,6] = 53
-
-        self.height_map[5:7,5] = 1
-        self.height_map[5:7,6] = -1
+        self.height_map[5,5] = 1
+        self.height_map[6,5] = 3
 
         self.entities = []
 
-        self.collision_cache = {}
+
 
 
     def get_collision_box_for_height(self, z):
@@ -204,13 +236,38 @@ class Chunk:
 
     def wipe_cache(self):
         self.collision_cache = None
+        self.neutral_cache = None
 
     def reset_cache(self):
         self.collision_cache = {}
+        self.neutral_cache = {}
 
-    def get_adjacent_relative_heights(self, x, y, active_chunks):
+    def add_to_neutral_cache(self, x, y, tile, chunkHandler):
+        if x < 0 and x >= TILES_PER_CHUNK:
+            if y < 0 and y >= TILES_PER_CHUNK:
+                fix_chunk_x = self.chunk_x + x // TILES_PER_CHUNK
+                fix_chunk_y = self.chunk_y + y // TILES_PER_CHUNK
+                fix_x = x % TILES_PER_CHUNK
+                fix_y = y % TILES_PER_CHUNK
+                for chunk in active_chunks:
+                    if chunk.chunk_x == fix_chunk_x and chunk.chunk_y == fix_chunk_y:
+                        chunk.add_to_neutral_cache(fix_x,fix_y,tile,chunkHandler)
+                        return
+        if (x,y) in self.neutral_cache.keys():
+            list = self.neutral_cache[(x,y)]
+            for i in range(len(list)):
+                if tile.original_y >= list[i].original_y:
+                    list.insert(i,tile)
+            self.neutral_cache[(x,y)] = list
+        else:
+            self.neutral_cache[(x,y)] = [tile]
+
+    """
+    Heights returned in order: up right down left
+    """
+    def get_adjacent_heights_safe(self, x, y, active_chunks):
         # get all adjacent heights
-        ret = [self.get_adjacent_tile_height(*t,active_chunks) for t in [(x,y-1), (x+1,y), (x,y+1), (x-1,y)]]
+        ret = [self.get_tile_height(*t,active_chunks) for t in [(x,y-1), (x+1,y), (x,y+1), (x-1,y)]]
         #if array has None values then we are at a chunk border that has not
         #been loaded. We assume the default height and toggle the no_cache flag.
         #This way we will try again at the next tick. It is likely that the chunk
@@ -218,10 +275,20 @@ class Chunk:
 
         no_cache = None in ret
         ret = [self.height_map[x,y] if v is None else v for v in ret]
-        ret = np.array(ret)
 
-        #convert to -1, 0, 1 based
-        ret = (ret - self.height_map[x,y]).astype(int)
+        return np.array(ret), no_cache
+
+    def get_adjacent_tile_types_safe(self, x, y, active_chunks):
+        # get all adjacent heights
+        ret = [self.get_tile_type(*t,active_chunks) for t in [(x,y-1), (x+1,y), (x,y+1), (x-1,y)]]
+        #if array has None values then we are at a chunk border that has not
+        #been loaded. We assume the default height and toggle the no_cache flag.
+        #This way we will try again at the next tick. It is likely that the chunk
+        #will be loaded in
+
+        no_cache = None in ret
+        ret = [self.tile_map[x,y] if v is None else v for v in ret]
+
         return np.array(ret), no_cache
 
     """
@@ -245,6 +312,20 @@ class Chunk:
             if chunk.chunk_x == fetch_chunk_x and chunk.chunk_y == fetch_chunk_y:
                 return chunk.height_map[fetch_x,fetch_y]
 
+        return None
+
+    def get_tile_type(self, x, y, active_chunks):
+        if 0 <= x and x < TILES_PER_CHUNK:
+            if 0 <= y and y < TILES_PER_CHUNK:
+                return self.tile_map[x,y]
+
+        fetch_chunk_x = self.chunk_x + x // TILES_PER_CHUNK
+        fetch_chunk_y = self.chunk_y + y // TILES_PER_CHUNK
+        fetch_x = x % TILES_PER_CHUNK
+        fetch_y = y % TILES_PER_CHUNK
+        for chunk in active_chunks:
+            if chunk.chunk_x == fetch_chunk_x and chunk.chunk_y == fetch_chunk_y:
+                return chunk.tile_map[fetch_x,fetch_y]
         return None
 
     def entity_in_chunk(self, entity):
