@@ -9,6 +9,9 @@ from entities.Player import Player
 from entities.Stationary import *
 from entities.NPC import *
 
+from Rendering import Render_Queue, queue_render
+from operator import itemgetter
+
 from KeyHandler import KeyHandler
 from InteractionHandler import InteractionHandler
 
@@ -40,6 +43,8 @@ entityHandler.add_entity(Rick(100,0,0))
 tileHandler = TileHandler()
 chunkHandler = ChunkHandler()
 
+
+
 def tick():
     # interaction handler for player interaction
     # chunk handler for terrain collision
@@ -48,8 +53,17 @@ def tick():
 def render():
     chunkHandler.update(player.x, player.y, screen.get_width(), screen.get_height(), entityHandler)
     screen.fill((0,100,0))
-    tileHandler.render(screen, player, chunkHandler)
-    entityHandler.render(screen, screen.get_width() / 2, screen.get_height() / 2)
+
+    center_x = screen.get_width()/ 2
+    center_y = screen.get_height() / 2
+    tileHandler.render(player, center_x, center_y, chunkHandler)
+    entityHandler.render(center_x, center_y)
+
+    render_list = sorted(Render_Queue.render_list,key=itemgetter(0))
+    for _,args in render_list:
+        screen.blit(*args)
+    Render_Queue.render_list = []
+
     #pygame.display.update()
     pygame.display.flip()
 

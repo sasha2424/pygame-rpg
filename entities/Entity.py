@@ -5,6 +5,8 @@ import math
 from spritesheet.SpriteSheet import SpriteSheet
 from Utils import *
 
+from Rendering import Render_Queue, queue_render
+
 class EntityHandler():
     def __init__(self, player):
         self.player = player
@@ -27,9 +29,10 @@ class EntityHandler():
                 continue
             i += 1
 
-    def render(self, screen, center_x, center_y):
+    def render(self, center_x, center_y):
         for entity in self.entities:
-            entity.draw(screen, self.player.x - center_x, self.player.y - center_y)
+            entity.draw(self.player.x - center_x, self.player.y - center_y)
+
 
     def update(self, interactionHandler, chunkHandler):
         for e in self.entities:
@@ -135,8 +138,9 @@ class Entity:
     def update(self, local_entities, player):
         pass
 
-    def draw(self, screen, dx, dy):
-        screen.blit(self.image,(self.x - dx - self.sprite_shift_x, self.y - dy - self.sprite_shift_y))
+    def draw(self, dx, dy):
+        queue_render(self.y, self.image,(self.x - dx - self.sprite_shift_x, self.y - dy - self.sprite_shift_y))
+
         # for b in self.collisionBox:
         #     if b.is_rect:
         #         pygame.draw.rect(self.image, (255,0,0,100), (b.x,b.y,b.w,b.h),1)

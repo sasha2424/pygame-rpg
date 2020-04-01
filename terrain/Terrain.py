@@ -3,6 +3,8 @@ from spritesheet.Animation import Animation
 from Utils import *
 import pygame
 
+from Rendering import Render_Queue, queue_render
+
 import numpy as np
 import math
 
@@ -26,11 +28,7 @@ class TileHandler:
                 self.tiles.append(sheet.image_at((x,y,32,32)))
 
 
-    def render(self, screen, player, chunkHandler):
-        
-
-        center_x = screen.get_width() / 2
-        center_y = screen.get_height() / 2
+    def render(self, player, center_x, center_y, chunkHandler):
         dx = player.x - center_x
         dy = player.y - center_y
 
@@ -54,11 +52,13 @@ class TileHandler:
                     tile_y = chunk_world_y + y * TILE_SIZE
 
                     if not (x,y) in chunk.neutral_cache.keys():
-                        self.build_tiles_and_cache(chunk, x, y,chunkHandler)
+                        self.build_tiles_and_cache(chunk, x, y, chunkHandler)
 
                     tile = chunk.neutral_cache[(x,y)][0]
                     tile_texture = self.texture_from_id(tile.get_texture_id())
-                    screen.blit(tile_texture,(tile_x - dx, tile_y - dy))
+                    original_world_y = chunk_world_y + tile.original_y * TILE_SIZE
+                    queue_render(original_world_y, tile_texture,(tile_x - dx, tile_y - dy))
+
 
     def build_tiles_and_cache(self, chunk, x, y, chunkHandler):
         adj_heights, no_cache = chunk.get_adjacent_heights_safe(x,y,chunkHandler.active_chunks.values())

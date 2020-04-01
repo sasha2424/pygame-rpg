@@ -19,7 +19,9 @@ class Player(Entity):
     def __init__(self, x, y, z):
         super().__init__(x, y, z)
 
-        self.add_collision_sphere(32,60,20,20)
+        self.add_collision_sphere(0,0,20,20)
+        self.sprite_shift_x = 32
+        self.sprite_shift_y = 60
 
         colorkey = (255, 255, 255)
         self.spritesheet = SpriteSheet("player")

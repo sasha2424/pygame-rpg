@@ -4,6 +4,8 @@ from spritesheet.Animation import Animation
 from Utils import *
 import pygame
 
+from Rendering import Render_Queue, queue_render
+
 class Dialogue:
     def __init__(self):
         self.conv = {}
@@ -175,7 +177,7 @@ class Dialogue:
     def add_stage(self, id, text, options=[], delay=-1, next_stage=-1,end=False):
         self.conv[id] = (text, options,delay,next_stage,end)
 
-    def draw(self, screen, X, Y):
+    def draw(self, X, Y):
         if self.is_open:
             if self.prompt == None:
                 self.update_prompt()
@@ -196,41 +198,41 @@ class Dialogue:
             border_x = -dx / 2
             border_y = -c2_h - dy
             while border_x < dx / 2 - e_w:
-                screen.blit(self.top,(X + border_x, Y - c2_h - dy - c_h),(0,0,e_w,c_h))
-                screen.blit(self.bottom,(X + border_x, Y - c2_h),(0,0,e_w,c2_h))
+                queue_render(Y, self.top,(X + border_x, Y - c2_h - dy - c_h),(0,0,e_w,c_h))
+                queue_render(Y, self.bottom,(X + border_x, Y - c2_h),(0,0,e_w,c2_h))
                 border_x += e_w
-            screen.blit(self.top,(X + border_x, Y - c2_h - dy - c_h),(0,0,dx/2 - border_x + 1,c_h))
-            screen.blit(self.bottom,(X + border_x, Y - c2_h),(0,0,dx/2 - border_x + 1,c2_h))
+            queue_render(Y, self.top,(X + border_x, Y - c2_h - dy - c_h),(0,0,dx/2 - border_x + 1,c_h))
+            queue_render(Y, self.bottom,(X + border_x, Y - c2_h),(0,0,dx/2 - border_x + 1,c2_h))
 
             while border_y < -c2_h - e_w:
-                screen.blit(self.left,(X - dx / 2 - c_w, Y + border_y),(0,0,c_w,e_h))
-                screen.blit(self.right,(X + dx / 2, Y + border_y),(0,0,c2_w,e_h))
+                queue_render(Y, self.left,(X - dx / 2 - c_w, Y + border_y),(0,0,c_w,e_h))
+                queue_render(Y, self.right,(X + dx / 2, Y + border_y),(0,0,c2_w,e_h))
                 border_y += e_h
-            screen.blit(self.left,(X - dx / 2 - c_w, Y + border_y),(0,0,c_w,-c2_h - border_y + 1))
-            screen.blit(self.right,(X + dx / 2, Y + border_y),(0,0,c2_w,-c2_h - border_y + 1))
+            queue_render(Y, self.left,(X - dx / 2 - c_w, Y + border_y),(0,0,c_w,-c2_h - border_y + 1))
+            queue_render(Y, self.right,(X + dx / 2, Y + border_y),(0,0,c2_w,-c2_h - border_y + 1))
 
             center_x = -dx / 2
             while center_x < dx / 2 - e_w:
                 center_y = -c2_h - dy
                 while center_y < -c2_h - e_w:
-                    screen.blit(self.center,(X + center_x, Y + center_y),(0,0,e_w,e_h))
+                    queue_render(Y, self.center,(X + center_x, Y + center_y),(0,0,e_w,e_h))
                     center_y += e_h
-                screen.blit(self.center,(X + center_x, Y + center_y),(0,0,e_w,-c2_h - center_y + 1))
+                queue_render(Y, self.center,(X + center_x, Y + center_y),(0,0,e_w,-c2_h - center_y + 1))
                 center_x += e_w
             center_y = -c2_h - dy
             while center_y < -c2_h - e_w:
-                screen.blit(self.center,(X + center_x, Y + center_y),(0,0,dx/2 - center_x + 1,e_h))
+                queue_render(Y, self.center,(X + center_x, Y + center_y),(0,0,dx/2 - center_x + 1,e_h))
                 center_y += e_h
-            screen.blit(self.center,(X + center_x, Y + center_y),(0,0,dx/2 - center_x + 1,-c2_h - center_y + 1))
+            queue_render(Y, self.center,(X + center_x, Y + center_y),(0,0,dx/2 - center_x + 1,-c2_h - center_y + 1))
 
             # Corners
-            screen.blit(self.top_left,(X - dx / 2 - c_w, Y - c2_h - dy - c_h),(0,0,c_w,c_h))
-            screen.blit(self.top_right,(X + dx / 2, Y - c2_h - dy - c_h),(0,0,c2_w,c_h))
-            screen.blit(self.bottom_left,(X - dx / 2 - c_w, Y - c2_h),(0,0,c_w,c2_h))
-            screen.blit(self.bottom_right,(X + dx / 2, Y - c2_h),(0,0,c2_w,c2_h))
+            queue_render(Y, self.top_left,(X - dx / 2 - c_w, Y - c2_h - dy - c_h),(0,0,c_w,c_h))
+            queue_render(Y, self.top_right,(X + dx / 2, Y - c2_h - dy - c_h),(0,0,c2_w,c_h))
+            queue_render(Y, self.bottom_left,(X - dx / 2 - c_w, Y - c2_h),(0,0,c_w,c2_h))
+            queue_render(Y, self.bottom_right,(X + dx / 2, Y - c2_h),(0,0,c2_w,c2_h))
 
             if r >= 1:
-                screen.blit(self.prompt,(X - dx / 2, Y - c2_h - dy))
+                queue_render(Y, self.prompt,(X - dx / 2, Y - c2_h - dy))
 
 
 class NPC(Entity):
@@ -290,6 +292,6 @@ class Rick(NPC):
         self.dialogue.add_stage(9, "Bye   ", [], delay=50, end=True)
 
 
-    def draw(self, screen, dx, dy):
-        super().draw(screen, dx, dy)
-        self.dialogue.draw(screen,self.x - dx,self.y - dy - 50)
+    def draw(self, dx, dy):
+        super().draw(dx, dy)
+        self.dialogue.draw(self.x - dx,self.y - dy - 50)
