@@ -40,7 +40,6 @@ class GrassTile:
         c = sum((adj_heights_relative < 0)*np.array([1,2,4,8]))
         id_dict = [11,10,21,20,12,23,22,24,1,0,3,13,2,4,15,14]
         if not id_dict[c] == 11:
-            print(id_dict[c])
         return Tile(id_dict[c])
 
     def get_side():

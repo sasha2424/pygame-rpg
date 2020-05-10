@@ -191,7 +191,17 @@ class Chunk:
 
 
         self.height_map[5,5] = 1
+        self.height_map[5,6] = 1
+        self.height_map[5,7] = 1
         self.height_map[6,5] = 3
+        self.height_map[6,6] = 3
+        self.height_map[7,5] = 3
+        self.height_map[6,6] = 2
+        self.height_map[6,7] = 2
+        self.height_map[7,6] = 2
+        self.height_map[6,7] = 1
+        self.height_map[6,8] = 1
+        self.height_map[7,7] = 1
 
         self.entities = []
 
